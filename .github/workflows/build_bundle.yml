@@ -38,6 +38,7 @@ jobs:
           mkdir -p release_assets
           MPP_FILE=$(ls patches/build/libs/*.mpp | grep -v "sources" | grep -v "javadoc" | head -n 1)
           cp "$MPP_FILE" release_assets/patches.mpp
+          zip -u release_assets/patches.mpp patches-list.json patches-bundle.json
           cp patches-bundle.json release_assets/
           cp patches-list.json release_assets/
 
