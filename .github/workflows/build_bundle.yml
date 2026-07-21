@@ -33,14 +33,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GPR_KEY || secrets.GITHUB_TOKEN }}
         run: ./gradlew generatePatchesList -Pgpr.user=${{ github.actor }} -Pgpr.key=${{ secrets.GPR_KEY || secrets.GITHUB_TOKEN }}
 
+      - name: Prepare Release Assets
+        run: |
+          mkdir -p release_assets
+          MPP_FILE=$(ls patches/build/libs/*.mpp | grep -v "sources" | grep -v "javadoc" | head -n 1)
+          cp "$MPP_FILE" release_assets/patches.mpp
+          cp patches-bundle.json release_assets/
+          cp patches-list.json release_assets/
+
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: piko-patches-bundle
-          path: |
-            patches/build/libs/*.mpp
-            patches-bundle.json
-            patches-list.json
+          path: release_assets/*
 
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
@@ -50,9 +55,6 @@ jobs:
           body: "Automated patch bundle containing all 127 Instagram and Twitter patches, including the Instagram comment media download crash fix."
           draft: false
           prerelease: false
-          files: |
-            patches/build/libs/*.mpp
-            patches-bundle.json
-            patches-list.json
+          files: release_assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
