@@ -29,4 +29,4 @@ jobs:
       - name: Build with Gradle
         env:
           GITHUB_TOKEN: ${{ secrets.GPR_KEY || secrets.GITHUB_TOKEN }}
-        run: ./gradlew clean generatePatchesList
+        run: ./gradlew clean generatePatchesList -Pgpr.user=${{ github.actor }} -Pgpr.key=${{ secrets.GPR_KEY || secrets.GITHUB_TOKEN }}
