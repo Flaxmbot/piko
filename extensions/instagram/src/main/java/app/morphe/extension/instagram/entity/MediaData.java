@@ -100,13 +100,17 @@ public class MediaData extends Entity {
 
     private List<MediaData> getCarouselMediaData() throws Exception {
         List<MediaData> carouselMediaData = new ArrayList<>();
-        List<Object> mediaList = this.getMediaList();
-        if (mediaList.isEmpty()){
+        try {
+            List<Object> mediaList = this.getMediaList();
+            if (mediaList != null && !mediaList.isEmpty()) {
+                for (Object item : mediaList) {
+                    carouselMediaData.add(new MediaData(item, this.userSession));
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        if (carouselMediaData.isEmpty()) {
             carouselMediaData.add(new MediaData(this.obj, this.userSession));
-        } else {
-            mediaList.forEach(item->{
-                carouselMediaData.add(new MediaData(item, this.userSession));
-            });
         }
         return carouselMediaData;
     }
@@ -190,9 +194,15 @@ public class MediaData extends Entity {
     }
 
     public List<Object> getMediaList() throws Exception {
-        List mediaList = (List) super.getMethod(this.getExtendedData(), "methodName");
-        if (mediaList != null) {
-            return mediaList;
+        try {
+            Object extendedData = this.getExtendedData();
+            if (extendedData != null) {
+                List mediaList = (List) super.getMethod(extendedData, "methodName");
+                if (mediaList != null && !mediaList.isEmpty()) {
+                    return mediaList;
+                }
+            }
+        } catch (Exception ignored) {
         }
         return Arrays.asList(this.obj);
     }
@@ -242,26 +252,59 @@ public class MediaData extends Entity {
     }
 
     public List getImageVariants() throws Exception {
-        Object imageInfoObject = (Object) super.getField(this.getMoreExtendedData(), "fieldName");
-        List variantList = (List) super.getMethod(imageInfoObject, "methodName");
+        try {
+            Object moreExtendedData = this.getMoreExtendedData();
+            if (moreExtendedData != null) {
+                Object imageInfoObject = super.getField(moreExtendedData, "fieldName");
+                if (imageInfoObject != null) {
+                    List variantList = (List) super.getMethod(imageInfoObject, "methodName");
+                    if (variantList != null) {
+                        List<ImageData> imageList = new ArrayList<>();
+                        variantList.forEach(item -> imageList.add(new ImageData(item)));
+                        return imageList;
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
 
-        List<ImageData> imageList = new ArrayList<>();
-        variantList.forEach(item -> imageList.add(new ImageData(item)));
-        return imageList;
+        try {
+            Object extendedData = this.getExtendedData();
+            if (extendedData != null) {
+                Object imageInfoObject = super.getField(extendedData, "fieldName");
+                if (imageInfoObject != null) {
+                    List variantList = (List) super.getMethod(imageInfoObject, "methodName");
+                    if (variantList != null) {
+                        List<ImageData> imageList = new ArrayList<>();
+                        variantList.forEach(item -> imageList.add(new ImageData(item)));
+                        return imageList;
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        return null;
     }
 
     public String getVideoLink() throws Exception {
-        List<VideoData> videoDataList = this.getVideoVariants();
-        if(videoDataList!=null){
-            return videoDataList.get(0).getUrl();
+        try {
+            List<VideoData> videoDataList = this.getVideoVariants();
+            if (videoDataList != null && !videoDataList.isEmpty()) {
+                return videoDataList.get(0).getUrl();
+            }
+        } catch (Exception ignored) {
         }
         return null;
     }
     
     public String getImageLink() throws Exception {
-        List<ImageData> imageDataList = this.getImageVariants();
-        if(imageDataList!=null){
-            return imageDataList.get(0).getUrl();
+        try {
+            List<ImageData> imageDataList = this.getImageVariants();
+            if (imageDataList != null && !imageDataList.isEmpty()) {
+                return imageDataList.get(0).getUrl();
+            }
+        } catch (Exception ignored) {
         }
         return null;
     }
