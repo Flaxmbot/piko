@@ -218,10 +218,18 @@ public class DownloadUtils {
             int carouselSize = mediaInfo.getCarouselSize();
 
             for (int index = 0; index < carouselSize; index++) {
-                MediaData currentMediaData = mediaInfo.getMediaAt(index);
-                String fileName = username+"_"+currentMediaData.getDownloadFilename(MediaType.ANY);
-                String mediaUrl = currentMediaData.getMediaLink();
-                downloader.enqueue(new DownloadRequest(mediaUrl, subFolder, fileName));
+                final int currentIndex = index;
+                try {
+                    MediaData currentMediaData = mediaInfo.getMediaAt(currentIndex);
+                    String mediaUrl = currentMediaData.getMediaLink();
+                    if (mediaUrl != null && !mediaUrl.isEmpty()) {
+                        String fileName = username + "_" + currentMediaData.getDownloadFilename(MediaType.ANY);
+                        downloader.enqueue(new DownloadRequest(mediaUrl, subFolder, fileName));
+                    }
+                } catch (Exception ex) {
+                    PikoUtils.logger(ex);
+                    Logger.printException(() -> "Error downloading carousel item at index " + currentIndex, ex);
+                }
             }
         } else {
             Utils.showToastShort("There is nothing to download");
