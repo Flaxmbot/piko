@@ -40,9 +40,17 @@ public class Entity {
     }
 
     public Object getField(Class cls, Object clsObj, String fieldName) throws Exception {
-        Field field = cls.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        return (Object) field.get(clsObj);
+        Class<?> current = cls;
+        while (current != null) {
+            try {
+                Field field = current.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                return field.get(clsObj);
+            } catch (NoSuchFieldException e) {
+                current = current.getSuperclass();
+            }
+        }
+        throw new NoSuchFieldException("No field " + fieldName + " in class " + (cls != null ? cls.getName() : "null"));
     }
 
     public Object getField(Object clsObj, String fieldName) throws Exception {
@@ -66,10 +74,23 @@ public class Entity {
             clazz = clsObj.getClass();
         }
 
-        Method method = clazz.getDeclaredMethod(methodName, paramTypes);
-        method.setAccessible(true);
+        Method method = null;
+        Class<?> current = clazz;
+        while (current != null) {
+            try {
+                method = current.getDeclaredMethod(methodName, paramTypes);
+                break;
+            } catch (NoSuchMethodException e) {
+                current = current.getSuperclass();
+            }
+        }
 
-        return method.invoke(null, params);
+        if (method == null) {
+            throw new NoSuchMethodException("No method " + methodName + " in class " + clazz.getName());
+        }
+
+        method.setAccessible(true);
+        return method.invoke(clsObj instanceof Class<?> ? null : clsObj, params);
     }
 
     public Object getMethod(Object clsObj, String methodName, Object... params) throws Exception {
@@ -81,7 +102,21 @@ public class Entity {
         }
 
         if (params == null || params.length == 0) {
-            return clazz.getDeclaredMethod(methodName).invoke(clsObj);
+            Method method = null;
+            Class<?> current = clazz;
+            while (current != null) {
+                try {
+                    method = current.getDeclaredMethod(methodName);
+                    break;
+                } catch (NoSuchMethodException e) {
+                    current = current.getSuperclass();
+                }
+            }
+            if (method == null) {
+                throw new NoSuchMethodException("No method " + methodName + " in class " + clazz.getName());
+            }
+            method.setAccessible(true);
+            return method.invoke(clsObj instanceof Class<?> ? null : clsObj);
         } else {
             Class<?>[] paramTypes = new Class<?>[params.length];
             for (int i = 0; i < params.length; i++) {
@@ -89,7 +124,6 @@ public class Entity {
             }
             return this.getMethod(clsObj, methodName, paramTypes, params);
         }
-
     }
 
     public Object getMethod(String methodName, Class<?>[] paramTypes, Object... params) throws Exception {
